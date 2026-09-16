@@ -1,0 +1,15 @@
+name: Sync upstream
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pull upstream main into this fork
+        run: gh repo sync mattdwright75/n8n-mcp --source czlonkowski/n8n-mcp --branch main --force
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
