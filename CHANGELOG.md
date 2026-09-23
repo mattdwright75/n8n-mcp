@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.88.0] - 2026-09-23
+
+### Changed
+
+- **Updated n8n to 2.40.x.** n8n-nodes-base 2.39.4 → 2.40.2, n8n-core 2.39.4 → 2.40.3, n8n-workflow 2.39.2 → 2.40.1, @n8n/n8n-nodes-langchain 2.39.4 → 2.40.3. Rebuilt the node database: 2,864 nodes (836 core: 706 from n8n-nodes-base, 130 from @n8n/n8n-nodes-langchain; 2,028 community, 1,674 verified). The new core nodes are Microsoft Dataverse and its tool variant, and Confluence is now available as an AI tool (`confluenceTool`). Among the changed node schemas, Grist gained OAuth2 authentication, Microsoft Teams gained channel, chat and meeting operations, HTTP Request gained the WebDAV methods `COPY`, `MKCOL`, `MOVE`, `PROPFIND` and `REPORT`, Databricks gained job operations, and the AI Agent gained an option to force a tool call on the first iteration. `node_versions` is unchanged at 629 rows. The community node refresh saved 1,678 verified nodes and 109 node rows from 60 npm packages, adding 70 community nodes and removing none; all 70 received READMEs and AI summaries, so 2,015 of 2,028 community nodes are documented (the other 13 come from packages that publish no README). The database is 68.5 MiB.
+- **n8n 2.40 contract check.** Across the Public API endpoints n8n-mcp calls, the changes are compatible: path parameters were renamed in the specification without changing the URLs, `POST /credentials` accepts `null` values inside `data`, list and create responses declare more fields, and execution IDs are declared as positive integers (a non-numeric ID was already rejected with 400). The `/git-connections` endpoints were replaced by `/promotions`, and `/node-type-policies` is new; no tool uses them. n8n's MCP server exposes the same 54 tools. `discover_agent_assets` accepts the providers `moonshotai`, `alibaba` and `minimax`, and `verify_agent_mcp_server` accepts a `metadata.nodeTypeName` and a `$self` expression as the URL; `n8n_manage_agents` passes arguments through unchanged, so both are available without code changes.
+- **Agent credential hint covers the n8n 2.40 providers.** When n8n rejects an agent's credential, `n8n_manage_agents` names the credential types the agents runtime accepts. That list now includes `moonshotApi`, `alibabaCloudApi` and `minimaxApi`, and the Azure Entra ID credential (`azureEntraCognitiveServicesOAuth2Api`), which n8n 2.40 lists for `azure-openai` but its agents runtime does not map to a model, gets the same "not accepted" hint as the Azure OpenAI API key credential.
+
 ## [2.87.0] - 2026-09-16
 
 ### Added

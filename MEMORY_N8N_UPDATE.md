@@ -117,6 +117,16 @@ gh release list | head -1
 **Cause**: npm 11 skips the install scripts of packages not covered by `allowScripts`, so `npm install` does not recompile better-sqlite3 for the current Node.js and the rebuild falls back to sql.js, which has no FTS5
 **Solution**: `npm rebuild better-sqlite3`, then `npm run build && npm run rebuild && npm run validate`
 
+**Problem**: `npm run fetch:community` aborts (exit 134) with `Assertion failed: (env) != nullptr` in `RemoveEnvironmentCleanupHook`, while fetching or saving nodes
+**Cause**: better-sqlite3 11.10 crashes in a statement destructor during garbage collection under Node.js 24.21. Forcing sql.js does not help: the community fetch writes to FTS5-indexed tables, which sql.js lacks
+**Solution**: run the community fetch and the docs generators under Node.js 22, then recompile for the default Node.js. The fetch upserts, so re-running it after an abort is safe; check `sqlite3 data/nodes.db 'pragma integrity_check'` first
+```bash
+PATH=/opt/homebrew/opt/node@22/bin:$PATH npm rebuild better-sqlite3
+PATH=/opt/homebrew/opt/node@22/bin:$PATH node dist/scripts/fetch-community-nodes.js
+# generate-community-docs.js runs the same way
+npm rebuild better-sqlite3   # back to the default Node.js
+```
+
 **Problem**: `generate:docs:readme-only` exits with code 1
 **Reason**: Some packages have no README anywhere (the fetch reads the tarball when the registry metadata has none) or are no longer on npm
 **Normal**: A few failed fetches are expected; check the "With README" count instead of the exit code
