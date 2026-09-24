@@ -464,6 +464,9 @@ export interface McpToolResponse {
   hint?: string;
   officialError?: unknown;
   truncated?: boolean;
+  // n8n_manage_agents: the personal project ID filled in for an omitted or
+  // `personal` args.projectId.
+  defaultedProjectId?: string;
   // n8n_list_catalog: which catalog was listed ('projects' | 'tags') and
   // which backend answered ('public-api' | 'official-mcp' | 'n8n-mcp').
   kind?: string;

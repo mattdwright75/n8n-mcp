@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.89.0] - 2026-09-23
+
+### Changed
+
+- **`n8n_manage_agents` defaults `projectId` to your personal project.** n8n's `create_agent`, `discover_agent_assets` and `verify_agent_mcp_server` require a `projectId`, and the tool did not say so or offer a way around it, so `discover_assets` without one failed with `projectId: Required`. When `args.projectId` is omitted, `null`, empty or the alias `personal` (the alias `n8n_manage_folders` already accepts), the tool now reads the personal project of the MCP access token's user with n8n's `search_projects` and fills it in. In n8n's implementation that tool lists only projects the caller belongs to, so an instance owner does not get another user's personal project. The response reports the filled-in ID as `defaultedProjectId`, also on failure responses (n8n rejecting another argument, or a timeout or transport error on the call itself). The action then takes a second round trip, the lookup before the call. The lookup uses the caller's `timeoutMs` when it is shorter than 30 seconds. If the lookup fails or does not return exactly one personal project, `personal` is refused with `INVALID_ARGS` before anything is sent, and an omitted `projectId` is left for n8n to report; both responses carry a hint to pass `projectId` from `n8n_list_catalog({kind: 'projects'})`. An explicit `projectId` is never replaced, and `search`, where `projectId` is an optional filter, is not defaulted. The tool description, the `args` schema description and `tools_documentation` describe the default; they no longer say that arguments are forwarded verbatim.
+
 ## [2.88.0] - 2026-09-23
 
 ### Changed
