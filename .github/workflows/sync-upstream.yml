@@ -10,6 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Pull upstream main into this fork
-        run: gh repo sync mattdwright75/n8n-mcp --source czlonkowski/n8n-mcp --branch main --force
+        # No --force: it hard-resets main to upstream and would delete this fork-only file.
+        # SYNC_TOKEN (PAT with Contents + Workflows write) is needed whenever upstream edits
+        # .github/workflows; the built-in GITHUB_TOKEN can never write workflow files.
+        run: gh repo sync mattdwright75/n8n-mcp --source czlonkowski/n8n-mcp --branch main
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.SYNC_TOKEN || secrets.GITHUB_TOKEN }}
