@@ -9,7 +9,7 @@ import {
 import { ParsedNode, normalizeNodeVersion } from '../parsers/node-parser';
 import { SQLiteStorageService } from '../services/sqlite-storage-service';
 import { NodeTypeNormalizer } from '../utils/node-type-normalizer';
-import { logger } from '../utils/logger';
+import { logger, stripLineBreaks } from '../utils/logger';
 import { NPM_MISSING_README_PLACEHOLDER } from '../constants/npm-readme';
 
 // Default retention window for workflow version backups (days). Configurable
@@ -300,6 +300,49 @@ export class NodeRepository {
     
     const rows = this.db.prepare(sql).all() as any[];
     return rows.map(row => this.parseNodeRow(row));
+  }
+
+  /**
+   * Display names of core action nodes per credential type they accept: not
+   * triggers, tool variants or AI sub-nodes (only nodes whose outputs are a plain
+   * main output), and not HTTP Request itself. Credentials of AI model providers
+   * (used by a chat-model or embeddings sub-node) are left out: their action
+   * nodes cover a small part of the provider's API.
+   */
+  getActionNodesByCredentialType(): Map<string, string[]> {
+    type Row = { node_type: string; display_name: string; credentials_required: string | null; outputs: string | null };
+    const rows = this.db.prepare(`
+      SELECT node_type, display_name, credentials_required, outputs
+      FROM nodes
+      WHERE is_community = 0 AND is_trigger = 0 AND is_tool_variant = 0
+    `).all() as Row[];
+
+    const credentialNames = (row: Row): string[] => {
+      const credentials = this.safeJsonParse(row.credentials_required ?? '', []);
+      if (!Array.isArray(credentials)) return [];
+      return credentials.map(credential => credential?.name).filter((name): name is string => typeof name === 'string');
+    };
+
+    const modelProviderCredentials = new Set<string>();
+    for (const row of rows) {
+      if (!/ai_languageModel|ai_embedding/.test(row.outputs ?? '')) continue;
+      for (const credential of credentialNames(row)) modelProviderCredentials.add(credential);
+    }
+
+    const byCredential = new Map<string, string[]>();
+    for (const row of rows) {
+      // HTTP Request itself, and the legacy vector-store insert nodes (Pinecone: Insert, ...)
+      if (row.node_type === 'nodes-base.httpRequest' || row.node_type.startsWith('nodes-langchain.vectorStore')) continue;
+      const outputs = this.safeJsonParse(row.outputs ?? '', null);
+      if (!Array.isArray(outputs) || outputs.length !== 1 || outputs[0] !== 'main') continue;
+      for (const credential of credentialNames(row)) {
+        if (modelProviderCredentials.has(credential)) continue;
+        const nodeNames = byCredential.get(credential) ?? [];
+        if (!nodeNames.includes(row.display_name)) nodeNames.push(row.display_name);
+        byCredential.set(credential, nodeNames);
+      }
+    }
+    return byCredential;
   }
 
   getNodeCount(): number {
@@ -646,8 +689,9 @@ export class NodeRepository {
       // `nodeType` is passed as a separate argument (not interpolated into
       // the format string) so a value containing `%s` / `%d` / `%o` can't
       // hijack `console.error`'s format directives. Addresses CodeQL
-      // js/tainted-format-string.
-      console.error('Error getting default operation for', nodeType, error);
+      // js/tainted-format-string. Line breaks are replaced so the value
+      // cannot forge a log line (js/log-injection).
+      console.error('Error getting default operation for', stripLineBreaks(String(nodeType)), error);
       return undefined;
     }
 
