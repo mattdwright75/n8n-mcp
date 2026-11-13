@@ -40,7 +40,7 @@ RUN --mount=type=cache,target=/root/.npm \
     echo '{"overrides":{"isolated-vm":"npm:empty-npm-package@1.0.0"}}' > package.json && \
     npm install --no-save typescript@^5.8.3 @types/node@^22.15.30 @types/express@^5.0.3 \
         @modelcontextprotocol/sdk@1.30.0 dotenv@^16.5.0 express@^5.1.0 axios@^1.21.0 \
-        n8n-workflow@2.46.4 uuid@^11.1.1 @types/uuid@^10.0.0 \
+        n8n-workflow@2.46.5 uuid@^11.1.1 @types/uuid@^10.0.0 \
         openai@^4.77.0 zod@3.25.76 lru-cache@^11.2.1 \
         undici@^6.29.0 acorn@^8.16.0
 
@@ -94,7 +94,7 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh /usr/local/bin/n8n-mcp
 
 # Add container labels
 LABEL org.opencontainers.image.source="https://github.com/czlonkowski/n8n-mcp"
-LABEL org.opencontainers.image.description="n8n MCP Server - Runtime Only"
+LABEL org.opencontainers.image.description="MCP server that lets AI assistants operate n8n: debug, edit, validate, test and build workflows on any n8n instance"
 LABEL org.opencontainers.image.licenses="MIT"
 LABEL org.opencontainers.image.title="n8n-mcp"
 
